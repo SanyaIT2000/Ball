@@ -1,0 +1,58 @@
+import pyray
+import random
+from raylib import colors
+
+
+class Ball:
+    def __init__(self,x: int, y: int, speed: int, img_source: str) -> None:
+        self.__x = self.__real_x = x
+        self.__y = self.__real_y = y
+        self.__speed = speed
+        image = pyray.load_image(img_source)
+        self.__texture = pyray.load_texture_from_image(image)
+        pyray.unload_image(image)
+        self.__move_x_flag = 1 if random.randint(0,1) else -1
+        self.__move_y_flag = 1 if random.randint(0,1) else -1
+    def __del__(self) -> None:
+        pyray.unload_texture(self.__texture)
+    def move(self,dt: float,screen_wigth: int,screen_height: int) -> None:
+        self.__real_x += self.__speed * dt * self.__move_x_flag
+        self.__real_y += self.__speed * dt * self.__move_y_flag
+        self.__x = int(self.__real_x)
+        self.__y = int(self.__real_y)
+        self.__walls(screen_wigth,screen_height)
+    def __walls(self,screen_wigth: int,screen_height: int) -> None:
+        if self.__real_x <= 0 or self.__real_x + self.__texture.width >= screen_wigth:
+            self.__move_x_flag *= -1
+        if self.__real_y <= 0 or self.__real_y + self.__texture.height >= screen_height:
+            self.__move_y_flag *= -1
+    def draw(self,color: pyray.Color) -> None:
+        pyray.draw_texture(self.__texture,self.__x,self.__y,color)
+
+
+class App:
+    def __init__(self) -> None:
+        self.__width = 800
+        self.__height = 600
+        pyray.init_window(self.__width, self.__height, "The ball")
+        self.__bg_color = colors.WHITE
+        self.__ball = Ball(self.__width // 2,self.__height,300,"images/basketball.png")
+    def __del__(self) -> None:
+        pyray.close_window()
+    def run(self) -> None:
+        while not pyray.window_should_close():
+            self.__ball.move(pyray.get_frame_time(),self.__width,self.__height)
+            pyray.begin_drawing()
+            pyray.clear_background(self.__bg_color) #type: ignore
+            self.__ball.draw(self.__bg_color) #type: ignore
+            pyray.end_drawing()
+            
+
+
+def main() -> None:
+    app = App()
+    app.run()
+
+
+if __name__ == "__main__":
+    main()
